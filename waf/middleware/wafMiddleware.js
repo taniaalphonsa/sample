@@ -1,10 +1,19 @@
 const fs = require('fs');
-const sendAlert = require('../logs/services/alertService');
+const path = require('path');
+
+// Define the log directory and file path
+const logDir = path.join(__dirname, '..', 'logs');
+const logFile = path.join(logDir, 'suspicious_activity.log');
+
+// Ensure that the log directory exists
+if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+}
 
 // Log suspicious activity
 const logSuspiciousActivity = (req, reason) => {
     const log = `IP: ${req.ip}, URL: ${req.url}, Method: ${req.method}, Reason: ${reason}, Time: ${new Date().toISOString()}\n`;
-    fs.appendFileSync('logs/suspicious_activity.log', log);
+    fs.appendFileSync(logFile, log);
     //sendAlert(log);
 };
 
@@ -27,7 +36,7 @@ const wafMiddleware = (req, res, next) => {
     const method = req.method;
 
     // Example: Block requests from certain IPs
-    const blockedIPs = ['192.168.1.1', '10.0.0.1'];
+    const blockedIPs = ['192.168.1.1', '10.0.0.1', '192.168.1.191', '::1'];
     if (blockedIPs.includes(ip)) {
         logSuspiciousActivity(req, 'Blocked IP');
         return res.status(403).send('Access Denied');
