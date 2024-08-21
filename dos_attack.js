@@ -11,7 +11,7 @@ function getRandomIpWithPort() {
 
 // Function to send requests
 async function sendRequests() {
-  const totalRequests = 50; // Adjust the number of requests as needed
+  const totalRequests = 150; // Adjust the number of requests as needed
   const serverUrl = 'http://localhost:3000'; // Change this if the server is not running locally
 
   for (let i = 0; i < totalRequests; i++) {
