@@ -3,10 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 const rateLimit = require('express-rate-limit');
+const http = require('http');
 
 // In-memory store for tracking IP requests and timestamps
 const requestCounts = {};
-const DDoS_THRESHOLD = 100; // Define your DDoS threshold
+const DDoS_THRESHOLD = 20; // Define the threshold (20 requests)
 const PAUSE_TIME = 5000; // 5 seconds
 
 // Create the report directory if it doesn't exist
@@ -39,7 +40,8 @@ app.use((req, res, next) => {
 // Rate limiter configuration
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: DDoS_THRESHOLD, // Number of requests to trigger a report
+  max: DDoS_THRESHOLD, // Limit each IP to 20 requests per window
+  message: 'Too many requests, please try again later.', // Response message
   delayMs: 0 // No delay
 });
 
@@ -57,6 +59,13 @@ app.use((req, res, next) => {
       if (requestCounts[ip] && requestCounts[ip].count >= DDoS_THRESHOLD) {
         console.log(`DoS attack detected from IP: ${ip}`);
         generatePdfReport(ip, requestCounts[ip].count, true); // true indicates DoS attack
+
+        // Shut down the server
+        console.log('Shutting down the server due to excessive requests...');
+        server.close(() => {
+          console.log('Server has been shut down.');
+          process.exit(0); // Exit with success status
+        });
       }
     }, PAUSE_TIME);
 
@@ -92,7 +101,10 @@ function generatePdfReport(ip, requests, isDosAttack) {
   console.log(`PDF report generated successfully at ${filePath}`);
 }
 
+// Create and start the HTTP server
+const server = http.createServer(app);
+
 const PORT = 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
