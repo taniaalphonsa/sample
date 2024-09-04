@@ -7,7 +7,7 @@ const http = require('http');
 
 // In-memory store for tracking IP requests and timestamps
 const requestCounts = {};
-const DDoS_THRESHOLD = 20; // Define the threshold (20 requests)
+const DDoS_THRESHOLD = 100; // Define the threshold (100 requests)
 const PAUSE_TIME = 5000; // 5 seconds
 
 // Create the report directory if it doesn't exist
@@ -37,39 +37,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiter configuration
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: DDoS_THRESHOLD, // Limit each IP to 20 requests per window
-  message: 'Too many requests, please try again later.', // Response message
-  delayMs: 0 // No delay
-});
-
-app.use(limiter);
-
 // Middleware to check for DoS attack and generate PDF
 app.use((req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-  if (requestCounts[ip] && requestCounts[ip].count >= DDoS_THRESHOLD) {
-    console.log(`High traffic detected from IP: ${ip}`);
-    
-    setTimeout(() => {
-      // Check if high traffic persists after the pause
-      if (requestCounts[ip] && requestCounts[ip].count >= DDoS_THRESHOLD) {
-        console.log(`DoS attack detected from IP: ${ip}`);
-        generatePdfReport(ip, requestCounts[ip].count, true); // true indicates DoS attack
+  if (requestCounts[ip] && requestCounts[ip].count > DDoS_THRESHOLD) {
+    console.log(`DoS attack detected from IP: ${ip}`);
+    generatePdfReport(ip, requestCounts[ip].count, true); // true indicates DoS attack
 
-        // Shut down the server
-        console.log('Shutting down the server due to excessive requests...');
-        server.close(() => {
-          console.log('Server has been shut down.');
-          process.exit(0); // Exit with success status
-        });
-      }
-    }, PAUSE_TIME);
+    // Shut down the server
+    console.log('Shutting down the server due to suspected DDoS attack...');
+    server.close(() => {
+      console.log('Server has been shut down.');
+      process.exit(0); // Exit with success status
+    });
 
-    res.status(429).send('Too Many Requests');
+    res.status(503).send('Server is temporarily not accepting more requests due to suspected DDoS attack.');
   } else {
     next();
   }

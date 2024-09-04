@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const config = {
-    serverUrl: 'http://localhost:3000',
+    serverUrl: 'http://localhost:3002',
     interval: 5000, // Check every 5 seconds
     timeout: 5000,  // Set a 5-second timeout for requests
     retryCount: 3,  // Number of retries for transient errors

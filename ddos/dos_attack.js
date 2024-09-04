@@ -1,32 +1,28 @@
 const axios = require('axios');
 
-function getRandomIp() {
-  return Array(4).fill(0).map(() => Math.floor(Math.random() * 256)).join('.');
-}
+const serverUrl = 'http://localhost:3002'; // Your server URL
+const totalRequests = 150; // Total number of requests to send
+const delayBetweenRequests = 50; // Delay between requests in milliseconds
 
-function getRandomIpWithPort() {
-  const ip = getRandomIp();
-  return `${ip}`;
-}
-
-// Function to send requests
-async function sendRequests() {
-  const totalRequests = 150; // Adjust the number of requests as needed
-  const serverUrl = 'http://localhost:3000'; // Change this if the server is not running locally
-
-  for (let i = 0; i < totalRequests; i++) {
-    const fakeIp = getRandomIpWithPort();
-    try {
-      const response = await axios.get(serverUrl, {
-        headers: { 'x-forwarded-for': fakeIp }
-      });
-      console.log(`Response from server: ${response.data}`);
-      console.log(`IP Address: ${fakeIp}`);
-    } catch (error) {
-      console.error(`Error from IP ${fakeIp}:, error.message`);
+async function sendRequest() {
+  try {
+    const response = await axios.get(serverUrl);
+    console.log(`Status: ${response.status}, Data: ${response.data}`);
+  } catch (error) {
+    if (error.response) {
+      console.log(`Status: ${error.response.status}, Message: ${error.response.data}`);
+    } else {
+      console.log('Error:', error.message);
     }
   }
 }
 
-// Call the function to send requests
-sendRequests();
+async function runTest() {
+  for (let i = 0; i < totalRequests; i++) {
+    console.log(`Sending request ${i + 1}/${totalRequests}`);
+    sendRequest();
+    await new Promise((resolve) => setTimeout(resolve, delayBetweenRequests));
+  }
+}
+
+runTest();
