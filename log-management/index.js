@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const winstonLogger = require('./logger').winstonLogger;
 const bunyanLogger = require('./logger').bunyanLogger;
-const { analyzeLogs } = require('./geminiClient');
 
 const app = express();
 app.use(express.json());
@@ -54,6 +53,12 @@ const monitorAccess = (ip) => {
 // Example endpoints to simulate login and access
 app.post('/login', (req, res) => {
     const { username, password, ip } = req.body;
+
+    if (!ip) {
+        res.status(400).send('IP address is required');
+        return;
+    }
+
     const loginResult = monitorLogin(username, password, ip);
 
     if (loginResult === 'blocked') {
@@ -71,6 +76,12 @@ app.post('/login', (req, res) => {
 
 app.get('/access', (req, res) => {
     const { ip } = req.query;
+
+    if (!ip) {
+        res.status(400).send('IP address is required');
+        return;
+    }
+
     const isAllowed = monitorAccess(ip);
 
     if (isAllowed) {
@@ -83,7 +94,6 @@ app.get('/access', (req, res) => {
         res.status(403).send('Access denied');
     }
 });
-
 
 app.post('/analyze-logs', async (req, res) => {
     try {
@@ -100,7 +110,7 @@ app.post('/analyze-logs', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     winstonLogger.info(`Server started on port ${PORT}`);

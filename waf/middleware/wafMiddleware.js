@@ -36,7 +36,7 @@ const wafMiddleware = (req, res, next) => {
     const method = req.method;
 
     // Example: Block requests from certain IPs
-    const blockedIPs = ['192.168.1.1', '10.0.0.1', '192.168.1.191', '::1'];
+    const blockedIPs = ['192.168.1.1', '10.0.0.1', '192.168.1.191'];
     if (blockedIPs.includes(ip)) {
         logSuspiciousActivity(req, 'Blocked IP');
         return res.status(403).send('Access Denied');

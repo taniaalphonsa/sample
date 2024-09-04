@@ -8,11 +8,33 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
+      - ./server:/usr/src/app/server
+      - ./log-management:/usr/src/app/log-management
+      - ./waf:/usr/src/app/waf
     environment:
       - NODE_ENV=production
     command: npm start
+
+  server2:
+    image: node:16
+    working_dir: /usr/src/app
+    volumes:
+      - D:/sample/ddos:/usr/src/app
+    command: node server2.js
+
+  log-management:
+    image: node:16
+    working_dir: /usr/src/app
+    volumes:
+      - D:/sample/log-management:/usr/src/app
+    command: node index.js
+
+  waf:
+    image: node:16
+    working_dir: /usr/src/app
+    volumes:
+      - D:/sample/waf:/usr/src/app
+    command: node server.js
 
   # Optional: Add a service for MongoDB, Redis, etc.
   # db:
